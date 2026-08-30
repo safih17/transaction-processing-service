@@ -112,10 +112,9 @@ Run the application:
 
 .\mvnw spring-boot:run
 
-The application runs on:gg
-## Example
+## API Endpoint
 
-After starting the application, you can access a customer's transactions using:
+The application provides transaction data at:
 
 http://localhost:8080/api/transactions/customer/CUST001
 
