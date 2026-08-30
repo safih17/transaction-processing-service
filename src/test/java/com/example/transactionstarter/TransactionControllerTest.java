@@ -1,6 +1,8 @@
 package com.example.transactionstarter;
 
 import com.example.transactionstarter.entity.Transaction;
+import com.example.transactionstarter.enums.Currency;
+import com.example.transactionstarter.enums.TransactionStatus;
 import com.example.transactionstarter.enums.TransactionType;
 import com.example.transactionstarter.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,9 +52,10 @@ public class TransactionControllerTest {
         mockMvc.perform(post("/api/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.transactionId").value("TXN001"))
                 .andExpect(jsonPath("$.customerId").value("CUST001"))
+                .andExpect(jsonPath("$.currency").value("INR"))
                 .andExpect(jsonPath("$.transactionStatus").value("PENDING"));
     }
 
@@ -64,8 +67,9 @@ public class TransactionControllerTest {
         transaction.setTransactionId("TXN002");
         transaction.setCustomerId("CUST002");
         transaction.setAmount(new BigDecimal("500"));
-        transaction.setCurrency("INR");
+        transaction.setCurrency(Currency.INR);
         transaction.setTransactionType(TransactionType.PAYMENT);
+        transaction.setTransactionStatus(TransactionStatus.PENDING);
 
         transactionRepository.save(transaction);
 
@@ -86,6 +90,44 @@ public class TransactionControllerTest {
     }
 
     @Test
+    void shouldRejectNegativeAmount() throws Exception {
+
+        String requestBody = """
+                {
+                    "transactionId": "TXN003",
+                    "customerId": "CUST003",
+                    "amount": -500,
+                    "currency": "INR",
+                    "transactionType": "PAYMENT"
+                }
+                """;
+
+        mockMvc.perform(post("/api/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldRejectInvalidCurrency() throws Exception {
+
+        String requestBody = """
+                {
+                    "transactionId": "TXN_INVALID",
+                    "customerId": "CUST001",
+                    "amount": 1000,
+                    "currency": "HELLO",
+                    "transactionType": "PAYMENT"
+                }
+                """;
+
+        mockMvc.perform(post("/api/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldReturnNotFoundForMissingTransaction() throws Exception {
 
         mockMvc.perform(get("/api/transactions/TXN999"))
@@ -93,22 +135,56 @@ public class TransactionControllerTest {
     }
 
     @Test
-    void shouldRejectInvalidTransactionStatus() throws Exception {
+    void shouldAllowPendingToCompleted() throws Exception {
 
         Transaction transaction = new Transaction();
 
-        transaction.setTransactionId("TXN003");
-        transaction.setCustomerId("CUST003");
+        transaction.setTransactionId("TXN004");
+        transaction.setCustomerId("CUST004");
         transaction.setAmount(new BigDecimal("500"));
-        transaction.setCurrency("INR");
+        transaction.setCurrency(Currency.INR);
         transaction.setTransactionType(TransactionType.PAYMENT);
+        transaction.setTransactionStatus(TransactionStatus.PENDING);
 
         transactionRepository.save(transaction);
 
-        mockMvc.perform(
-                        put("/api/transactions/TXN003/status")
-                                .param("status", "INVALID")
-                )
+        String requestBody = """
+                {
+                    "status": "COMPLETED"
+                }
+                """;
+
+        mockMvc.perform(put("/api/transactions/TXN004/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.transactionStatus")
+                        .value("COMPLETED"));
+    }
+
+    @Test
+    void shouldRejectInvalidStatusTransition() throws Exception {
+
+        Transaction transaction = new Transaction();
+
+        transaction.setTransactionId("TXN005");
+        transaction.setCustomerId("CUST005");
+        transaction.setAmount(new BigDecimal("500"));
+        transaction.setCurrency(Currency.INR);
+        transaction.setTransactionType(TransactionType.PAYMENT);
+        transaction.setTransactionStatus(TransactionStatus.COMPLETED);
+
+        transactionRepository.save(transaction);
+
+        String requestBody = """
+                {
+                    "status": "PENDING"
+                }
+                """;
+
+        mockMvc.perform(put("/api/transactions/TXN005/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
                 .andExpect(status().isBadRequest());
     }
 }

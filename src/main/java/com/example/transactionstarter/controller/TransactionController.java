@@ -1,8 +1,11 @@
 package com.example.transactionstarter.controller;
 
-import com.example.transactionstarter.entity.Transaction;
+import com.example.transactionstarter.dto.CreateTransactionRequest;
+import com.example.transactionstarter.dto.TransactionResponse;
+import com.example.transactionstarter.dto.UpdateTransactionStatusRequest;
 import com.example.transactionstarter.service.TransactionService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,21 +23,23 @@ public class TransactionController {
 
     // Create a new transaction
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(
-            @Valid @RequestBody Transaction transaction) {
+    public ResponseEntity<TransactionResponse> createTransaction(
+            @Valid @RequestBody CreateTransactionRequest request) {
 
-        Transaction createdTransaction =
-                transactionService.createTransaction(transaction);
+        TransactionResponse createdTransaction =
+                transactionService.createTransaction(request);
 
-        return ResponseEntity.ok(createdTransaction);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(createdTransaction);
     }
 
     // Get transaction by transaction ID
     @GetMapping("/{transactionId}")
-    public ResponseEntity<Transaction> getTransactionById(
+    public ResponseEntity<TransactionResponse> getTransactionById(
             @PathVariable String transactionId) {
 
-        Transaction transaction =
+        TransactionResponse transaction =
                 transactionService.getTransactionById(transactionId);
 
         return ResponseEntity.ok(transaction);
@@ -42,24 +47,27 @@ public class TransactionController {
 
     // Get all transactions for a customer
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Transaction>> getTransactionsByCustomerId(
+    public ResponseEntity<List<TransactionResponse>>
+    getTransactionsByCustomerId(
             @PathVariable String customerId) {
 
-        List<Transaction> transactions =
-                transactionService.getTransactionsByCustomerId(customerId);
+        List<TransactionResponse> transactions =
+                transactionService
+                        .getTransactionsByCustomerId(customerId);
 
         return ResponseEntity.ok(transactions);
     }
 
     // Update transaction status
     @PutMapping("/{transactionId}/status")
-    public ResponseEntity<Transaction> updateTransactionStatus(
+    public ResponseEntity<TransactionResponse> updateTransactionStatus(
             @PathVariable String transactionId,
-            @RequestParam String status) {
+            @Valid @RequestBody UpdateTransactionStatusRequest request) {
 
-        Transaction updatedTransaction =
+        TransactionResponse updatedTransaction =
                 transactionService.updateTransactionStatus(
-                        transactionId, status);
+                        transactionId,
+                        request.getStatus());
 
         return ResponseEntity.ok(updatedTransaction);
     }

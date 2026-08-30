@@ -1,5 +1,7 @@
 package com.example.transactionstarter.service;
 
+import com.example.transactionstarter.dto.CreateTransactionRequest;
+import com.example.transactionstarter.dto.TransactionResponse;
 import com.example.transactionstarter.entity.Transaction;
 import com.example.transactionstarter.enums.TransactionStatus;
 import com.example.transactionstarter.repository.TransactionRepository;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
@@ -19,53 +22,107 @@ public class TransactionService {
     }
 
     // Create a new transaction
-    public Transaction createTransaction(Transaction transaction) {
+    public TransactionResponse createTransaction(
+            CreateTransactionRequest request) {
 
-        if (transactionRepository.existsById(transaction.getTransactionId())) {
+        // Check if transaction ID already exists
+        if (transactionRepository.existsById(request.getTransactionId())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Transaction already exists"
             );
         }
 
+        // Convert DTO to Entity
+        Transaction transaction = new Transaction();
+
+        transaction.setTransactionId(request.getTransactionId());
+        transaction.setCustomerId(request.getCustomerId());
+        transaction.setAmount(request.getAmount());
+        transaction.setCurrency(request.getCurrency());
+        transaction.setTransactionType(request.getTransactionType());
+
         // Always set initial status as PENDING
         transaction.setTransactionStatus(TransactionStatus.PENDING);
 
-        return transactionRepository.save(transaction);
+        Transaction savedTransaction =
+                transactionRepository.save(transaction);
+
+        return convertToResponse(savedTransaction);
     }
 
     // Get transaction by ID
-    public Transaction getTransactionById(String transactionId) {
+    public TransactionResponse getTransactionById(
+            String transactionId) {
 
-        return transactionRepository.findById(transactionId)
+        Transaction transaction = transactionRepository
+                .findById(transactionId)
                 .orElseThrow(() ->
                         new ResponseStatusException(
                                 HttpStatus.NOT_FOUND,
                                 "Transaction not found"
                         )
                 );
+
+        return convertToResponse(transaction);
     }
 
     // Get all transactions for a customer
-    public List<Transaction> getTransactionsByCustomerId(String customerId) {
+    public List<TransactionResponse> getTransactionsByCustomerId(
+            String customerId) {
 
-        return transactionRepository.findByCustomerId(customerId);
+        List<Transaction> transactions =
+                transactionRepository.findByCustomerId(customerId);
+
+        return transactions.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     // Update transaction status
-    public Transaction updateTransactionStatus(
+    public TransactionResponse updateTransactionStatus(
             String transactionId,
             String status) {
 
-        Transaction transaction = getTransactionById(transactionId);
+        Transaction transaction = transactionRepository
+                .findById(transactionId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Transaction not found"
+                        )
+                );
 
         try {
             TransactionStatus newStatus =
                     TransactionStatus.valueOf(status.toUpperCase());
 
+            // Only PENDING transactions can change status
+            if (transaction.getTransactionStatus()
+                    != TransactionStatus.PENDING) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Transaction status cannot be changed once it is COMPLETED or FAILED"
+                );
+            }
+
+            // PENDING can only change to COMPLETED or FAILED
+            if (newStatus != TransactionStatus.COMPLETED &&
+                    newStatus != TransactionStatus.FAILED) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "PENDING transaction can only be changed to COMPLETED or FAILED"
+                );
+            }
+
             transaction.setTransactionStatus(newStatus);
 
-            return transactionRepository.save(transaction);
+            Transaction updatedTransaction =
+                    transactionRepository.save(transaction);
+
+            return convertToResponse(updatedTransaction);
 
         } catch (IllegalArgumentException e) {
 
@@ -74,5 +131,33 @@ public class TransactionService {
                     "Invalid transaction status"
             );
         }
+    }
+
+    // Convert Entity to Response DTO
+    private TransactionResponse convertToResponse(
+            Transaction transaction) {
+
+        TransactionResponse response =
+                new TransactionResponse();
+
+        response.setTransactionId(
+                transaction.getTransactionId());
+
+        response.setCustomerId(
+                transaction.getCustomerId());
+
+        response.setAmount(
+                transaction.getAmount());
+
+        response.setCurrency(
+                transaction.getCurrency());
+
+        response.setTransactionType(
+                transaction.getTransactionType());
+
+        response.setTransactionStatus(
+                transaction.getTransactionStatus());
+
+        return response;
     }
 }

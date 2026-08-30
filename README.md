@@ -1,101 +1,145 @@
 # Transaction Processing Service
 
-## About the Project
+A RESTful Transaction Processing Service built using Java, Spring Boot, Maven, and H2 Database.
 
-This project is a simple REST API built using Java and Spring Boot to manage customer transactions.
+## Problem
+
+The service manages customer transactions with the following details:
+
+- Transaction ID
+- Customer ID
+- Amount
+- Currency
+- Transaction Type
+- Transaction Status
 
 The application supports four operations:
 
-- Create a transaction
-- Get a transaction by Transaction ID
-- Update a transaction status
-- Get all transactions for a Customer ID
+1. Create a transaction
+2. Get a transaction by ID
+3. Update transaction status
+4. Get all transactions for a customer
 
-Each transaction contains a Transaction ID, Customer ID, Amount, Currency, Transaction Type, and Transaction Status.
+## Architecture
 
----
+The application follows a layered architecture:
 
-## Assumptions and Validation
+Controller → Service → Repository → H2 Database
 
-I made the following decisions for validation:
+Supporting components include DTOs, Entities, Enums, and Global Exception Handling.
 
-- Transaction ID must be unique.
-- Transaction ID, Customer ID, and Currency cannot be empty.
-- Amount must be greater than 0.
+The project is implemented as a modular monolith to keep the solution simple and appropriate for the assignment scope.
+
+## Assumptions
+
+The following assumptions were made:
+
+- Transaction ID is unique.
+- A new transaction always starts with `PENDING` status.
+- Supported currencies are `INR`, `USD`, and `EUR`.
+- Only valid transaction status transitions are allowed.
+
+
+## Validation Rules
+
+- Transaction ID and Customer ID are required.
+- Amount must be greater than zero.
+- Supported currencies are INR, USD, and EUR.
 - Transaction Type is required.
-- Every new transaction is automatically assigned the `PENDING` status.
-- Invalid input returns `400 Bad Request`.
-- Duplicate Transaction IDs return `409 Conflict`.
-- A transaction that does not exist returns `404 Not Found`.
+- Duplicate Transaction IDs are rejected.
+- A new transaction is created with PENDING status.
 
-For status updates, any valid status is allowed:
+## Status Transition Rules
 
-`PENDING`, `COMPLETED`, `FAILED`, `CANCELLED`
+Allowed transitions:
 
-I did not add restrictions between status changes because the assignment does not define a specific transaction lifecycle.
+- PENDING → COMPLETED
+- PENDING → FAILED
 
----
+Invalid transitions, such as COMPLETED → PENDING or FAILED → PENDING, are rejected.
+
+These rules are enforced in the Service layer.
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/transactions` | Create a transaction |
-| GET | `/api/transactions/{transactionId}` | Get a transaction by ID |
-| PUT | `/api/transactions/{transactionId}/status?status=COMPLETED` | Update transaction status |
-| GET | `/api/transactions/customer/{customerId}` | Get all transactions for a customer |
+| GET | `/api/transactions/{transactionId}` | Get transaction by ID |
+| GET | `/api/transactions/customer/{customerId}` | Get transactions for a customer |
+| PUT | `/api/transactions/{transactionId}/status` | Update transaction status |
 
-Example request:
+## Error Handling
 
-```json
-{
-  "transactionId": "TXN001",
-  "customerId": "CUST001",
-  "amount": 1000,
-  "currency": "INR",
-  "transactionType": "PAYMENT"
-}
-```
+The application uses centralized exception handling and meaningful HTTP status codes:
 
----
+- 201 Created – Transaction created successfully
+- 200 OK – Successful request
+- 400 Bad Request – Invalid input or invalid status transition
+- 404 Not Found – Transaction not found
+- 409 Conflict – Duplicate Transaction ID
 
 ## Testing
 
-Automated tests were written using JUnit and Spring Boot Test with MockMvc.
+Automated tests were implemented using JUnit and Spring Boot Test.
 
 The tests cover:
 
-1. Successful transaction creation
-2. Validation failure for invalid transaction data
-3. Duplicate Transaction ID rejection
-4. Requesting a transaction that does not exist
-5. Invalid transaction status
+- Successful transaction creation
+- Negative amount validation
+- Invalid currency validation
+- Duplicate Transaction ID
+- Transaction not found
+- Valid status transition
+- Invalid status transition
 
-Run the tests using:
+Final test result:
 
-```powershell
-.\mvnw.cmd clean test
-```
+Tests run: 8  
+Failures: 0  
+Errors: 0  
+Skipped: 0  
 
----
+BUILD SUCCESS
 
-## Known Limitations and Improvements
+## How to Run
 
-This project uses an H2 in-memory database and does not include authentication or pagination.
+Run all tests:
 
-With more time, I would add:
+.\mvnw clean test
 
-- Authentication and authorization
-- Pagination for customer transactions
-- Custom error responses
-- More test cases
-- API documentation
-- A production database such as PostgreSQL
+Run the application:
 
----
+.\mvnw spring-boot:run
 
-## AI Usage Disclosure
+The application runs on:gg
+## Example
 
-AI was used as a learning and assistance tool to understand the project structure, review code, debug issues, and assist with testing and documentation.
+After starting the application, you can access a customer's transactions using:
 
-The final code was reviewed and tested before submission.
+http://localhost:8080/api/transactions/customer/CUST001
+
+## Known Limitations and Future Improvements
+
+The current implementation does not include authentication, pagination, advanced concurrency handling, idempotency, production database configuration, or API documentation.
+
+With more time, these could be added along with additional tests, logging, monitoring, and production-ready security.
+
+## Design Decisions
+
+DTOs are used to separate the API contract from the database entity. Enums restrict supported values, business rules are handled in the Service layer, and Transaction ID uniqueness is enforced through the persistence model.
+
+The solution was intentionally kept simple, clean, and focused on the assignment requirements.
+
+# AI Usage Disclosure
+
+ChatGPT and AI Cursor was used as an AI coding assistant during this project.
+
+It was used for:
+
+- Understanding the project structure
+- Guidance on implementing APIs, DTOs, validation, and exception handling
+- Suggestions for transaction status rules
+- Assistance with test cases and code review
+
+The final project was run and tested locally. All automated tests passed successfully with 8 tests passing and no failures or errors.

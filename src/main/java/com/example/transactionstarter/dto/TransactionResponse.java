@@ -1,39 +1,19 @@
-package com.example.transactionstarter.entity;
+package com.example.transactionstarter.dto;
 
 import com.example.transactionstarter.enums.Currency;
 import com.example.transactionstarter.enums.TransactionStatus;
 import com.example.transactionstarter.enums.TransactionType;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "transactions")
-public class Transaction {
+public class TransactionResponse {
 
-    @Id
     private String transactionId;
-
     private String customerId;
-
     private BigDecimal amount;
-
-    @Enumerated(EnumType.STRING)
     private Currency currency;
-
-    @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
-
-    @Enumerated(EnumType.STRING)
     private TransactionStatus transactionStatus;
-
-    public Transaction() {
-    }
 
     public String getTransactionId() {
         return transactionId;
