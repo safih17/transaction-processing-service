@@ -179,7 +179,6 @@ The application runs locally on:
 ```text
 http://localhost:8080
 ```
->>>>>>> e7f87cf (Update README documentation)
 
 ## Known Limitations and Future Improvements
 
