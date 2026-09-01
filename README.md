@@ -1,144 +1,218 @@
 # Transaction Processing Service
 
-A RESTful Transaction Processing Service built using Java, Spring Boot, Maven, and H2 Database.
+A RESTful Transaction Processing Service built using Java, Spring Boot, Maven, Spring Data JPA, and an H2 in-memory database.
 
-## Problem
+The application manages customer transactions and provides APIs to create transactions, retrieve transaction details, update transaction status, and view transactions for a specific customer.
 
-The service manages customer transactions with the following details:
+## Problem Understanding
 
-- Transaction ID
-- Customer ID
-- Amount
-- Currency
-- Transaction Type
-- Transaction Status
+Each transaction contains the following information:
 
-The application supports four operations:
+* Transaction ID
+* Customer ID
+* Amount
+* Currency
+* Transaction Type
+* Transaction Status
 
-1. Create a transaction
-2. Get a transaction by ID
-3. Update transaction status
-4. Get all transactions for a customer
+The application supports four core operations:
+
+1. Create a new transaction
+2. Retrieve a transaction by ID
+3. Update the status of an existing transaction
+4. Retrieve all transactions belonging to a customer
+
+## Technology Stack
+
+* Java 17
+* Spring Boot
+* Spring Web
+* Spring Data JPA
+* H2 Database
+* Maven
+* JUnit 5
+* Spring Boot Test
+* Postman
 
 ## Architecture
 
 The application follows a layered architecture:
 
+```text
 Controller → Service → Repository → H2 Database
+```
 
-Supporting components include DTOs, Entities, Enums, and Global Exception Handling.
+Additional components include:
 
-The project is implemented as a modular monolith to keep the solution simple and appropriate for the assignment scope.
+* DTOs for separating the API contract from the database entity
+* Entities for database persistence
+* Enums for controlled values such as currency, transaction type, and status
+* Centralized global exception handling
 
-## Assumptions
+The project is implemented as a modular monolith, keeping the design simple, clean, and appropriate for the assignment requirements.
 
-The following assumptions were made:
+## Assumptions and Validation
 
-- Transaction ID is unique.
-- A new transaction always starts with `PENDING` status.
-- Supported currencies are `INR`, `USD`, and `EUR`.
-- Only valid transaction status transitions are allowed.
+The following business rules are applied:
 
-
-## Validation Rules
-
-- Transaction ID and Customer ID are required.
-- Amount must be greater than zero.
-- Supported currencies are INR, USD, and EUR.
-- Transaction Type is required.
-- Duplicate Transaction IDs are rejected.
-- A new transaction is created with PENDING status.
+* Transaction ID must be unique.
+* Transaction ID and Customer ID are required.
+* Amount must be greater than zero.
+* Supported currencies are `INR`, `USD`, and `EUR`.
+* Transaction Type is required.
+* Duplicate Transaction IDs are rejected.
+* Every newly created transaction starts with `PENDING` status.
 
 ## Status Transition Rules
 
-Allowed transitions:
+The following status transitions are allowed:
 
-- PENDING → COMPLETED
-- PENDING → FAILED
+```text
+PENDING → COMPLETED
+PENDING → FAILED
+```
 
-Invalid transitions, such as COMPLETED → PENDING or FAILED → PENDING, are rejected.
+Once a transaction reaches `COMPLETED` or `FAILED`, it cannot transition back to another status.
 
-These rules are enforced in the Service layer.
+These business rules are enforced in the Service layer to maintain valid transaction states.
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/transactions` | Create a transaction |
-| GET | `/api/transactions/{transactionId}` | Get transaction by ID |
-| GET | `/api/transactions/customer/{customerId}` | Get transactions for a customer |
-| PUT | `/api/transactions/{transactionId}/status` | Update transaction status |
+| Method | Endpoint                                   | Description                              |
+| ------ | ------------------------------------------ | ---------------------------------------- |
+| POST   | `/api/transactions`                        | Create a new transaction                 |
+| GET    | `/api/transactions/{transactionId}`        | Retrieve a transaction by ID             |
+| GET    | `/api/transactions/customer/{customerId}`  | Retrieve all transactions for a customer |
+| PUT    | `/api/transactions/{transactionId}/status` | Update transaction status                |
+
+## Example Request
+
+### Create Transaction
+
+```json
+{
+  "transactionId": 1,
+  "customerId": "CUST001",
+  "amount": 500.00,
+  "currency": "INR",
+  "transactionType": "PAYMENT"
+}
+```
+
+A successful request creates the transaction with an initial status of `PENDING`.
 
 ## Error Handling
 
-The application uses centralized exception handling and meaningful HTTP status codes:
+The application uses centralized exception handling to provide meaningful HTTP responses.
 
-- 201 Created – Transaction created successfully
-- 200 OK – Successful request
-- 400 Bad Request – Invalid input or invalid status transition
-- 404 Not Found – Transaction not found
-- 409 Conflict – Duplicate Transaction ID
+| Status Code     | Description                                |
+| --------------- | ------------------------------------------ |
+| 201 Created     | Transaction created successfully           |
+| 200 OK          | Request completed successfully             |
+| 400 Bad Request | Invalid input or invalid status transition |
+| 404 Not Found   | Transaction not found                      |
+| 409 Conflict    | Duplicate Transaction ID                   |
 
-## Testing
+## API Testing
 
-Automated tests were implemented using JUnit and Spring Boot Test.
+The REST API endpoints were manually tested using Postman.
 
-The tests cover:
+Testing included:
 
-- Successful transaction creation
-- Negative amount validation
-- Invalid currency validation
-- Duplicate Transaction ID
-- Transaction not found
-- Valid status transition
-- Invalid status transition
+* Creating transactions
+* Retrieving transactions by ID
+* Retrieving transactions by Customer ID
+* Updating transaction status
+* Validation scenarios
+* Duplicate Transaction ID handling
+* Invalid status transitions
+* Error handling
 
-Final test result:
+## Automated Testing
 
-Tests run: 8  
-Failures: 0  
-Errors: 0  
-Skipped: 0  
+Automated tests were implemented using JUnit 5 and Spring Boot Test.
+
+The test cases cover:
+
+* Successful transaction creation
+* Negative amount validation
+* Invalid currency validation
+* Duplicate Transaction ID
+* Transaction not found
+* Valid status transition
+* Invalid status transition
+
+### Test Result
+
+```text
+Tests run: 8
+Failures: 0
+Errors: 0
+Skipped: 0
 
 BUILD SUCCESS
+```
 
 ## How to Run
 
-Run all tests:
+### Run All Tests
 
+```bash
 .\mvnw clean test
+```
 
-Run the application:
+### Run the Application
 
+```bash
 .\mvnw spring-boot:run
+```
 
+<<<<<<< HEAD
 ## API Endpoint
 
 The application provides transaction data at:
 
 http://localhost:8080/api/transactions/customer/CUST001
+=======
+The application runs locally on:
+
+```text
+http://localhost:8080
+```
+>>>>>>> e7f87cf (Update README documentation)
 
 ## Known Limitations and Future Improvements
 
-The current implementation does not include authentication, pagination, advanced concurrency handling, idempotency, production database configuration, or API documentation.
+The current implementation is focused on the assignment requirements. The following features are not included:
 
-With more time, these could be added along with additional tests, logging, monitoring, and production-ready security.
+* Authentication and authorization
+* Pagination
+* Idempotency handling
+* Advanced concurrency handling
+* Production database configuration
+* API documentation
+
+With additional time, the application could be improved by adding:
+
+* Swagger/OpenAPI documentation
+* Authentication and authorization
+* Logging and monitoring
+* Pagination for customer transaction results
+* Additional integration and edge-case tests
+* Production-ready database configuration
 
 ## Design Decisions
 
-DTOs are used to separate the API contract from the database entity. Enums restrict supported values, business rules are handled in the Service layer, and Transaction ID uniqueness is enforced through the persistence model.
+DTOs are used to separate the API layer from the persistence model, while enums help restrict supported values and improve type safety.
 
-The solution was intentionally kept simple, clean, and focused on the assignment requirements.
+Business rules, validation, and transaction status transitions are handled in the Service layer. Transaction ID uniqueness is enforced through the persistence model.
 
-# AI Usage Disclosure
+The solution was intentionally designed to be simple, maintainable, and focused on the requirements of the engineering challenge.
 
-ChatGPT and AI Cursor was used as an AI coding assistant during this project.
+## AI Usage Disclosure
 
-It was used for:
-
-- Understanding the project structure
-- Guidance on implementing APIs, DTOs, validation, and exception handling
-- Suggestions for transaction status rules
-- Assistance with test cases and code review
-
-The final project was run and tested locally. All automated tests passed successfully with 8 tests passing and no failures or errors.
+* Used ChatGPT and Cursor AI for guidance, implementation suggestions, and code review.
+* Reviewed and adapted AI suggestions to match the project requirements.
+* Corrected issues encountered during development and testing.
+* Verified the REST APIs using Postman.
+* Ran automated tests using JUnit and Spring Boot Test, with all 8 tests passing successfully.
