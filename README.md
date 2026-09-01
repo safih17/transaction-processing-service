@@ -173,7 +173,7 @@ BUILD SUCCESS
 The application provides transaction data at:
 
 http://localhost:8080/api/transactions/customer/CUST001
-=======
+
 The application runs locally on:
 
 ```text
