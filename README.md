@@ -167,7 +167,6 @@ BUILD SUCCESS
 .\mvnw spring-boot:run
 ```
 
-<<<<<<< HEAD
 ## API Endpoint
 
 The application provides transaction data at:
