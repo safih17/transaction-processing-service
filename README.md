@@ -49,7 +49,7 @@ Additional components include:
 * Enums for controlled values such as currency, transaction type, and status
 * Centralized global exception handling
 
-The project is implemented as a modular monolith, keeping the design simple, clean, and appropriate for the assignment requirements.
+The application follows a layered architecture, separating responsibilities between the Controller, Service, Repository, and persistence layers., keeping the design simple, clean,
 
 ## Assumptions and Validation
 
