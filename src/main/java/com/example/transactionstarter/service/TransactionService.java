@@ -5,6 +5,7 @@ import com.example.transactionstarter.dto.TransactionResponse;
 import com.example.transactionstarter.entity.Transaction;
 import com.example.transactionstarter.enums.TransactionStatus;
 import com.example.transactionstarter.repository.TransactionRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,10 +46,19 @@ public class TransactionService {
         // Always set initial status as PENDING
         transaction.setTransactionStatus(TransactionStatus.PENDING);
 
-        Transaction savedTransaction =
-                transactionRepository.save(transaction);
+        try {
+            Transaction savedTransaction =
+                    transactionRepository.saveAndFlush(transaction);
 
-        return convertToResponse(savedTransaction);
+            return convertToResponse(savedTransaction);
+
+        } catch (DataIntegrityViolationException exception) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Transaction already exists"
+            );
+        }
     }
 
     // Get transaction by ID

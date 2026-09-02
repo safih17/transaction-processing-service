@@ -3,21 +3,27 @@ package com.example.transactionstarter.dto;
 import com.example.transactionstarter.enums.Currency;
 import com.example.transactionstarter.enums.TransactionType;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
 public class CreateTransactionRequest {
 
     @NotBlank(message = "Transaction ID is required")
+    @Size(max = 50, message = "Transaction ID must not exceed 50 characters")
     private String transactionId;
 
     @NotBlank(message = "Customer ID is required")
+    @Size(max = 50, message = "Customer ID must not exceed 50 characters")
     private String customerId;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
+    @Digits(integer = 15, fraction = 2,
+            message = "Amount must have at most 15 integer digits and 2 decimal places")
     private BigDecimal amount;
 
     @NotNull(message = "Currency is required")
